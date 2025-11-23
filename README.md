@@ -4,11 +4,14 @@
  
  ### Key Highlights
  Model:  $\text{EfficientNetB0}$ (Pre-trained on ImageNet).
+
  Techniques: Transfer Learning (Freezing & Fine-Tuning), Data Augmentation, $\text{Class Weight}$ balancing.
+
  Performance: Achieved $84\%$ Validation Accuracy across 120 classes.
+
  Deployment: $\text{FastAPI}$ server integrated with $\text{TensorFlow/Keras}$ for low-latency inference.
  
- ### 📁 Project StructureThe code is organized into a modular structure for clarity, scalability, and data engineering:Plaintextanimal_classifier/
+ 📁 Project StructureThe code is organized into a modular structure for clarity, scalability, and data engineering:Plaintextanimal_classifier/
 ├── api/
 │   └── app.py            # FastAPI application for real-time predictions
 ├── config/
@@ -29,30 +32,34 @@
 Follow these steps to reproduce the environment and run the project.
 
 1. PrerequisitesYou must have Python 3.9+ installed.Bash
-  1.- Clone the repository
-   git clone [YOUR-REPO-URL]
-   cd animal_classifier
+      1.- Clone the repository
+      git clone [YOUR-REPO-URL]
+      cd animal_classifier
 
-  2.- Create and activate the virtual environment
-python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate # Linux/Mac
+      2.- Create and activate the virtual environment
+      python -m venv venv
+      .\venv\Scripts\activate  # Windows
+      source venv/bin/activate # Linux/Mac
 
- 3. Install dependencies
-pip install -r requirements.txt
+      3.- Install dependencies
+      pip install -r requirements.txt
 
-2. Data Setup (ETL Pipeline)This project includes custom scripts to handle the Stanford Dogs Dataset raw structure.
+2. Data Setup (ETL Pipeline)
+This project includes custom scripts to handle the Stanford Dogs Dataset raw structure.
 Download: Obtain the images.tar from the Stanford Dogs Dataset.
+
 Extract: Place the extracted Images folder (containing n0208... folders) in the project root.
+
 Run ETL Script: This script moves folders to data/train, cleans the names (e.g., n0208...-Chihuahua $\rightarrow$ Chihuahua), and auto-updates config.py.Bashpython -m src.data_setup
+
 (Optional) Cleanup: If the dataset contains metadata files (like .xml or 1KB files), run the cleanup utility:Bashpython -m src.cleanup
 
 3. Training & EvaluationThe training process runs in two phases automatically: Feature Extraction (Frozen base) and Fine-Tuning (Unfrozen top layers).Bash
 
- 1.- Start Training (Approx. 25-30 epochs total)
-python -m src.train
- 2.- Evaluate the best model (Generates Confusion Matrix & Metrics)
-python -m src.evaluate
+     1.- Start Training (Approx. 25-30 epochs total)
+     python -m src.train
+     2.- Evaluate the best model (Generates Confusion Matrix & Metrics)
+     python -m src.evaluate
 
 ### 🌐 API Deployment (Inference)The project is designed for immediate deployment using $\text{FastAPI}$.
 1. Launch the ServerExecute the following command from the root directory:Bashuvicorn api.app:app --reload
