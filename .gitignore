@@ -1,0 +1,12 @@
+# Entorno Virtual
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Dataset (Demasiado grande para Git)
+data/
+
+# Modelos (Solo subiremos la arquitectura, no el modelo binario si es grande)
+models/best_model.keras
