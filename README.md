@@ -11,7 +11,12 @@
 
  Deployment: $\text{FastAPI}$ server integrated with $\text{TensorFlow/Keras}$ for low-latency inference.
  
- 📁 Project StructureThe code is organized into a modular structure for clarity, scalability, and data engineering:Plaintextanimal_classifier/
+ 📁 Project Structure
+The code is organized into a modular structure for clarity, scalability, and data engineering:
+
+Plaintext
+
+animal_classifier/
 ├── api/
 │   └── app.py            # FastAPI application for real-time predictions
 ├── config/
@@ -28,7 +33,7 @@
     ├── data_setup.py     # ETL Script: Organizes raw datasets & updates config
     └── cleanup.py        # Utility: Recursively removes non-image metadata files
 
-### 🚀 Getting Started
+🚀 Getting Started
 Follow these steps to reproduce the environment and run the project.
 
 1. PrerequisitesYou must have Python 3.9+ installed.Bash
