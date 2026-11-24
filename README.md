@@ -9,6 +9,8 @@
 
  Performance: Achieved $84\%$ Validation Accuracy across 120 classes.
 
+ > **Note:** this figure was measured with a validation generator that still applied data augmentation. The generator has been fixed (validation now uses clean images); the metric will be re-measured on the next training run.
+
  Deployment: $\text{FastAPI}$ server integrated with $\text{TensorFlow/Keras}$ for low-latency inference.
  
  📁 Project Structure

@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications.efficientnet import preprocess_input
@@ -20,7 +22,16 @@ def get_data_generators():
         validation_split=0.2 # 20% automático para validación
     )
 
-    # 2. Generador de Test (Sin augmentation, solo preprocesamiento)
+    # 2. Validación: mismo split que train, pero SIN augmentation.
+    #    Keras reparte los archivos de forma determinista según validation_split,
+    #    así que el subset 'validation' es el mismo que antes; solo cambia que
+    #    las imágenes ya no se rotan/escalan al medir la métrica.
+    val_datagen = ImageDataGenerator(
+        preprocessing_function=preprocess_input,
+        validation_split=0.2
+    )
+
+    # 3. Generador de Test (Sin augmentation, solo preprocesamiento)
     test_datagen = ImageDataGenerator(preprocessing_function=preprocess_input)
 
     print(f"📥 Cargando datos desde: {TRAIN_DIR}")
@@ -35,12 +46,13 @@ def get_data_generators():
     )
 
     # Generador de Validación
-    val_gen = train_datagen.flow_from_directory(
+    val_gen = val_datagen.flow_from_directory(
         TRAIN_DIR,
         target_size=IMG_SIZE,
         batch_size=BATCH_SIZE,
         class_mode='categorical',
-        subset='validation'
+        subset='validation',
+        shuffle=False
     )
     
     # Generador de Test (Opcional)
@@ -60,4 +72,3 @@ def get_data_generators():
         print("⚠️ Carpeta 'test' no encontrada. Se omitirá el set de prueba.")
 
     return train_gen, val_gen, test_gen
-import os # Necesario para verificar existencia de directorios
