@@ -1,90 +1,158 @@
-# AnimalNet-Pro: Transfer Learning for 120 Dog Breeds🌟
+<div align="center">
 
- Project OverviewAnimalNet-Pro is a professional-grade image classification project built to demonstrate advanced Deep Learning techniques, modular software engineering practices, and robust MLOps deployment readiness. It specializes in classifying 120 distinct dog breeds using state-of-the-art Transfer Learning.This project showcases a complete workflow, from automated data cleaning and organization to live inference via a modern API.
- 
- ### Key Highlights
- Model:  $\text{EfficientNetB0}$ (Pre-trained on ImageNet).
+# 🐕 AnimalNet-Pro
 
- Techniques: Transfer Learning (Freezing & Fine-Tuning), Data Augmentation, $\text{Class Weight}$ balancing.
+**Dog breed classifier for 120 breeds, built with Transfer Learning on EfficientNetB0 and served through a FastAPI REST API.**
 
- Performance: Achieved $84\%$ Validation Accuracy across 120 classes.
+![Python](https://img.shields.io/badge/Python-3.9+-3776ab?logo=python&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras-ff6f00?logo=tensorflow&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Validation accuracy](https://img.shields.io/badge/Validation_accuracy-84%25-brightgreen)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
- Deployment: $\text{FastAPI}$ server integrated with $\text{TensorFlow/Keras}$ for low-latency inference.
- 
- 📁 Project Structure
-The code is organized into a modular structure for clarity, scalability, and data engineering:
+</div>
 
-Plaintext
+## Overview
 
-animal_classifier/
-├── api/
-│   └── app.py            # FastAPI application for real-time predictions
-├── config/
-│   └── config.py         # Global variables (paths, hyperparameters, 120 CLASSES list)
-├── data/
-│   └── train/            # Clean structure: 120 breed folders with JPGs
-├── models/
-│   └── best_model.keras  # The trained model weights (EfficientNetB0 + Custom Head)
-└── src/
-    ├── data_loader.py    # Data generators & augmentation pipeline
-    ├── model.py          # Model architecture & unfreezing logic
-    ├── train.py          # Main training loop (Transfer Learning + Fine-Tuning)
-    ├── evaluate.py       # Metrics, Confusion Matrix & Classification Report
-    ├── data_setup.py     # ETL Script: Organizes raw datasets & updates config
-    └── cleanup.py        # Utility: Recursively removes non-image metadata files
+AnimalNet-Pro covers the full image-classification workflow: preparing the raw [Stanford Dogs Dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/), training in two phases, evaluating per class, and serving the model through an API.
 
-🚀 Getting Started
-Follow these steps to reproduce the environment and run the project.
+| | |
+|---|---|
+| **Model** | EfficientNetB0 pre-trained on ImageNet + custom classification head |
+| **Dataset** | Stanford Dogs: 120 breeds, ~20,000 images |
+| **Result** | **84% validation accuracy** across 120 classes |
+| **Serving** | FastAPI + Uvicorn, model loaded once at startup |
 
-1. PrerequisitesYou must have Python 3.9+ installed.Bash
-      1.- Clone the repository
-      git clone [YOUR-REPO-URL]
-      cd animal_classifier
+## How it works
 
-      2.- Create and activate the virtual environment
-      python -m venv venv
-      .\venv\Scripts\activate  # Windows
-      source venv/bin/activate # Linux/Mac
+```mermaid
+flowchart LR
+    A["Stanford Dogs<br/>raw images"] --> B["data_setup.py<br/>ETL + class list"]
+    B --> C["data_loader.py<br/>augmentation"]
+    C --> D["Phase 1<br/>frozen base"]
+    D --> E["Phase 2<br/>fine-tuning"]
+    E --> F["best_model.keras"]
+    F --> G["evaluate.py<br/>metrics"]
+    F --> H["FastAPI<br/>/predict/"]
+```
 
-      3.- Install dependencies
-      pip install -r requirements.txt
+**Model.** EfficientNetB0 (224×224 input) without its top, followed by global average pooling, `Dropout(0.3)`, `Dense(128, relu)` and a 120-way softmax.
 
-2. Data Setup (ETL Pipeline)
-This project includes custom scripts to handle the Stanford Dogs Dataset raw structure.
-Download: Obtain the images.tar from the Stanford Dogs Dataset.
+**Training in two phases** ([`src/train.py`](src/train.py)):
 
-Extract: Place the extracted Images folder (containing n0208... folders) in the project root.
+1. **Feature extraction**: the base is frozen and only the new head is trained (Adam, learning rate `1e-4`, up to 20 epochs).
+2. **Fine-tuning**: the top layers of the base are unfrozen and trained with a lower learning rate (`1e-5`, 10 more epochs).
 
-Run ETL Script: This script moves folders to data/train, cleans the names (e.g., n0208...-Chihuahua $\rightarrow$ Chihuahua), and auto-updates config.py.Bashpython -m src.data_setup
+**Regularisation and stability**: data augmentation, class weights to offset class imbalance, `EarlyStopping`, `ReduceLROnPlateau`, and `ModelCheckpoint` keeping the best model by validation accuracy.
 
-(Optional) Cleanup: If the dataset contains metadata files (like .xml or 1KB files), run the cleanup utility:Bashpython -m src.cleanup
+**Evaluation** ([`src/evaluate.py`](src/evaluate.py)): confusion matrix and a per-class classification report.
 
-3. Training & EvaluationThe training process runs in two phases automatically: Feature Extraction (Frozen base) and Fine-Tuning (Unfrozen top layers).Bash
+## Getting started
 
-     1.- Start Training (Approx. 25-30 epochs total)
-     python -m src.train
-     2.- Evaluate the best model (Generates Confusion Matrix & Metrics)
-     python -m src.evaluate
+### 1. Install
 
-### 🌐 API Deployment (Inference)The project is designed for immediate deployment using $\text{FastAPI}$.
-1. Launch the ServerExecute the following command from the root directory:Bashuvicorn api.app:app --reload
-2. Test the EndpointDocumentation URL: Open your browser and navigate to http://127.0.0.1:8000/docs.Inference: Use the interactive interface to upload an image and receive a JSON response with the top prediction and probability vector.
-JSON{
-  "filename": "my_dog_image.jpg",
+You need Python 3.9 or newer.
+
+```bash
+git clone https://github.com/GaneshaDS/AnimalNet-Pro.git
+cd AnimalNet-Pro
+
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux / macOS
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### 2. Prepare the data
+
+1. Download `images.tar` from the [Stanford Dogs Dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/).
+2. Extract it so the `Images/` folder (with the `n0208...` subfolders) sits in the project root.
+3. Run the ETL script. It moves the folders into `data/train/`, cleans the names (`n02085620-Chihuahua` → `Chihuahua`) and updates the class list in [`config/config.py`](config/config.py):
+
+```bash
+python -m src.data_setup
+```
+
+Optionally, remove non-image metadata files left in the dataset:
+
+```bash
+python -m src.cleanup
+```
+
+### 3. Train and evaluate
+
+```bash
+python -m src.train      # both phases run automatically
+python -m src.evaluate   # confusion matrix + classification report
+```
+
+The best model is saved to `models/best_model.keras`.
+
+## API
+
+Start the server from the project root:
+
+```bash
+uvicorn api.app:app --reload
+```
+
+Open http://127.0.0.1:8000/docs to try it from the interactive Swagger UI, or call it directly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict/ -F "file=@my_dog.jpg"
+```
+
+Example response:
+
+```json
+{
+  "filename": "my_dog.jpg",
   "prediction": "Rottweiler",
   "confidence": 0.9876,
   "probabilities": {
     "Rottweiler": 0.9876,
     "German_shepherd": 0.0012,
-    // ... 118 other classes
+    "...": "118 more classes"
   }
 }
+```
 
-### 💡 Future Work & Expansion 
-The project architecture is optimized for domain expansion:Integration: To add new classes (e.g., Cats, Lions), simply add the new folders (data/train/cat/, data/train/lion/) and update the CLASSES list in config/config.py.Fine-Tuning: Rerunning python -m src.train will load the specialized dog weights and perform efficient Fine-Tuning on the combined dataset.Containerization: Implementation of a Dockerfile for streamlined cloud deployment.
+If the model file is missing, the API still starts but `/predict/` returns `503 Service Unavailable`.
 
-### Contributions 🤝
-Contributions are welcome! Please open an issue before submitting a pull request to discuss your proposal.
+## Project structure
 
-## Developed by Heriberto Ganesha Cortés Valdez. 
-l25121393@morelia.tecnm.mx
+```
+AnimalNet-Pro/
+├── api/
+│   └── app.py            # FastAPI app: loads the model at startup, /predict/ endpoint
+├── config/
+│   └── config.py         # Paths, hyperparameters and the list of 120 classes
+├── src/
+│   ├── data_setup.py     # ETL: organises the raw dataset and updates the class list
+│   ├── cleanup.py        # Removes non-image files from the dataset
+│   ├── data_loader.py    # Data generators and augmentation
+│   ├── model.py          # Architecture and unfreezing logic
+│   ├── train.py          # Two-phase training loop
+│   └── evaluate.py       # Metrics, confusion matrix and classification report
+├── data/                 # Created by data_setup.py (not tracked)
+├── models/               # best_model.keras (not tracked)
+└── requirements.txt
+```
+
+## Roadmap
+
+- [ ] Dockerfile for cloud deployment
+- [ ] Publish the trained weights so the API can run without training first
+- [ ] Simple web front end to upload a photo
+- [ ] Extend to more animal classes by adding folders and updating `CLASSES`
+
+## Author
+
+**Heriberto Ganesha Cortés Valdez** · [LinkedIn](https://www.linkedin.com/in/heriberto-ganesha-cort%C3%A9s-valdez-28bbb72b7/) · [ganesha.dev@outlook.com](mailto:ganesha.dev@outlook.com)
+
+## License
+
+Released under the [MIT License](LICENSE).
